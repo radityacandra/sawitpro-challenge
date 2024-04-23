@@ -26,7 +26,7 @@ func (s *Server) RegisterUser(ctx echo.Context) error {
 
 	// check for existing phone number
 	if existingUser := s.Repository.GetUserByPhoneNumber(ctx.Request().Context(), req.PhoneNumber); existingUser != nil {
-		return ctx.JSON(http.StatusBadRequest,
+		return ctx.JSON(http.StatusConflict,
 			response_wrapper.WrapperError(errors.New("registered user with the same phone number already exist"), 400))
 	}
 
@@ -119,7 +119,7 @@ func (s *Server) UpdateProfile(ctx echo.Context) error {
 	if user.PhoneNumberChanged(req.PhoneNumber) {
 		existingUser := s.Repository.GetUserByPhoneNumber(ctx.Request().Context(), *req.PhoneNumber)
 		if existingUser != nil {
-			return ctx.JSON(http.StatusBadRequest,
+			return ctx.JSON(http.StatusConflict,
 				response_wrapper.WrapperError(errors.New("registered user with the same phone number already exist"), 400))
 		}
 	}
@@ -131,7 +131,7 @@ func (s *Server) UpdateProfile(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, response_wrapper.WrapperError(errors.New("failed to update profile"), 500))
 	}
 
-	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.UserProfileDto{
+	return ctx.JSON(http.StatusAccepted, response_wrapper.WrapperSuccess(generated.UserProfileDto{
 		FullName:    &user.FullName,
 		PhoneNumber: helper.ToPointer(user.GetFormalizedPhoneNumber()),
 	}))

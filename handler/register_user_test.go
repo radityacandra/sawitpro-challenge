@@ -36,6 +36,14 @@ func TestRegisterUser(t *testing.T) {
 			getUserByPhoneNumber:   nil,
 		},
 		{
+			name:                   "should return error if failed to bind data",
+			reqBody:                `{"fullName":123}`,
+			expectSavedPhoneNumber: "6281123456789",
+			expectSavedUserName:    "test",
+			expectHttpCode:         422,
+			getUserByPhoneNumber:   nil,
+		},
+		{
 			name:                   "should return validation error",
 			reqBody:                `{"fullName":"test","phoneNumber":"6281123456789","password":"Password123!!!"}`,
 			expectSavedPhoneNumber: "6281123456789",
@@ -48,7 +56,7 @@ func TestRegisterUser(t *testing.T) {
 			reqBody:                `{"fullName":"test","phoneNumber":"+6281123456789","password":"Password123!!!"}`,
 			expectSavedPhoneNumber: "6281123456789",
 			expectSavedUserName:    "test",
-			expectHttpCode:         400,
+			expectHttpCode:         409,
 			getUserByPhoneNumber:   model.NewUser("test", "6281123456789"),
 		},
 	}
