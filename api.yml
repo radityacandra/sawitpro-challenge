@@ -1,0 +1,124 @@
+# This is the OpenAPI specification for your service. It is used to generate the client code.
+# To generate the server code, use the Gradle task `openApiGenerate`. The 
+# generated code will be placed in `build/generate-resources/main`.
+#
+# We will evaluate you based on how well you design your API.
+# 1. How well it follows REST principles.
+# 2. How easy it is to understand and use.
+#
+# References
+# 1. https://swagger.io/specification/
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: User Service
+  license:
+    name: MIT
+servers:
+  - url: http://localhost
+paths:
+  /users:
+    post:
+      summary: Register a new user
+      operationId: registerUser
+      requestBody:
+        description: user object to be registered
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '200':
+          description: Success Response
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Response"
+        '400':
+          description: Error Response
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Response"
+  /users/auth:
+    post:
+      summary: Authenticate a user
+      operationId: authenticateUser
+      requestBody:
+        description: field to be authenticated
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/AuthenticateUserRequest'
+      responses:
+        '200':
+          description: Success Response
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Response"
+        '400':
+          description: Error Response
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Response"
+components:
+  schemas:
+    CreateUserRequest:
+      type: object
+      required:
+        - phoneNumber
+        - fullName
+        - password
+      properties:
+        phoneNumber:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "min=10,max=13,phoneNumber"
+        fullName:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "min=3,max=60"
+        password:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: min=6,max=64,password
+          minLength: 6
+          maxLength: 64
+          pattern: ^(?=.*[A-Z])(?=.*[0-9])(?=.*[-!$%^&*()_+|~=`{}\[\]:";'<>?,.\/])[\x00-\x7F]{3,64}$
+    Response: 
+      type: object
+      required:
+        - success
+        - data
+        - message
+        - code
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        message:
+          type: string
+        code:
+          type: integer
+    AuthenticateUserRequest:
+      type: object
+      required:
+        - phoneNumber
+        - password
+      properties:
+        phoneNumber:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: "min=10,max=13,phoneNumber"
+          minLength: 10
+          maxLength: 13
+        password:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: min=6,max=64,password
+          minLength: 6
+          maxLength: 64
+          pattern: ^(?=.*[A-Z])(?=.*[0-9])(?=.*[-!$%^&*()_+|~=`{}\[\]:";'<>?,.\/])[\x00-\x7F]{3,64}$
