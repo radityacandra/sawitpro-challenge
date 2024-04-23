@@ -15,4 +15,5 @@ type RepositoryInterface interface {
 	GetUserById(ctx context.Context, id int) (user *model.User)
 
 	InsertUser(ctx context.Context, user *model.User) (*model.User, error)
+	UpdateUser(ctx context.Context, user *model.User) error
 }

@@ -87,7 +87,46 @@ func (s *Server) GetUserProfile(ctx echo.Context) error {
 	user := s.Repository.GetUserById(ctx.Request().Context(), int(data["userId"].(float64)))
 
 	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.UserProfileDto{
-		FullName:    user.FullName,
-		PhoneNumber: user.PhoneNumber,
+		FullName:    &user.FullName,
+		PhoneNumber: &user.PhoneNumber,
+	}))
+}
+
+func (s *Server) UpdateProfile(ctx echo.Context) error {
+	data, err := jwt.AuthorizeToken(ctx.Request().Header.Get("Authorization"))
+	if err != nil {
+		return ctx.JSON(http.StatusForbidden, response_wrapper.WrapperError(err, 403))
+	}
+
+	var req generated.UserProfileDto
+
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusUnprocessableEntity, response_wrapper.WrapperError(err, 422))
+	}
+
+	if err := s.Validator.Struct(req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(err, 400))
+	}
+
+	user := s.Repository.GetUserById(ctx.Request().Context(), int(data["userId"].(float64)))
+
+	if user.PhoneNumberChanged(req.PhoneNumber) {
+		existingUser := s.Repository.GetUserByPhoneNumber(ctx.Request().Context(), *req.PhoneNumber)
+		if existingUser != nil {
+			return ctx.JSON(http.StatusBadRequest,
+				response_wrapper.WrapperError(errors.New("registered user with the same phone number already exist"), 400))
+		}
+	}
+
+	user.UpdateFullName(req.FullName)
+	user.UpdatePhoneNumber(req.PhoneNumber)
+
+	if err := s.Repository.UpdateUser(ctx.Request().Context(), user); err != nil {
+		return ctx.JSON(http.StatusInternalServerError, response_wrapper.WrapperError(errors.New("failed to update profile"), 500))
+	}
+
+	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.UserProfileDto{
+		FullName:    &user.FullName,
+		PhoneNumber: &user.PhoneNumber,
 	}))
 }

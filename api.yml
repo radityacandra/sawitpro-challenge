@@ -97,6 +97,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Response"
+    put:
+      summary: Update currently authenticated user
+      operationId: updateProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - message
+                  - code
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    $ref: "#/components/schemas/UserProfileDto"
+                  message:
+                    type: string
+                  code:
+                    type: integer
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
 components:
   schemas:
     CreateUserRequest:
@@ -109,11 +142,15 @@ components:
         phoneNumber:
           type: string
           x-oapi-codegen-extra-tags:
-            validate: "min=10,max=13,phoneNumber"
+            validate: "min=10,max=14,phoneNumber"
+          minLength: 10
+          maxLength: 14
         fullName:
           type: string
           x-oapi-codegen-extra-tags:
             validate: "min=3,max=60"
+          minLength: 3
+          maxLength: 60
         password:
           type: string
           x-oapi-codegen-extra-tags:
@@ -158,14 +195,19 @@ components:
           pattern: ^(?=.*[A-Z])(?=.*[0-9])(?=.*[-!$%^&*()_+|~=`{}\[\]:";'<>?,.\/])[\x00-\x7F]{3,64}$
     UserProfileDto:
       type: object
-      required:
-        - fullName
-        - phoneNumber
       properties:
         phoneNumber:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: "omitnil,min=10,max=14,phoneNumber"
+          minLength: 10
+          maxLength: 14
         fullName:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: "omitnil,min=3,max=60"
+          minLength: 3
+          maxLength: 60
   securitySchemes:
     bearerAuth:
       type: http

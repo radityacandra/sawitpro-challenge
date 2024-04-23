@@ -43,3 +43,12 @@ func (r *Repository) GetUserById(ctx context.Context, id int) *model.User {
 
 	return &user
 }
+
+func (r *Repository) UpdateUser(ctx context.Context, user *model.User) error {
+	_, err := r.Db.ExecContext(ctx, "UPDATE users SET full_name = $1, phone_number = $2, updated_by = $3 WHERE id = $3", user.FullName, user.PhoneNumber, user.Id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
