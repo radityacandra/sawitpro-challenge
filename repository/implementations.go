@@ -9,7 +9,7 @@ import (
 
 func (r *Repository) GetUserByPhoneNumber(ctx context.Context, phoneNumber string) *model.User {
 	var user model.User
-	err := r.Db.QueryRowContext(ctx, "SELECT id, full_name, phone_number, password FROM users WHERE phone_number = $1", phoneNumber).
+	err := r.Db.QueryRowContext(ctx, "SELECT id, full_name, phone_number, password FROM users WHERE phone_number = $1", phoneNumber[1:]).
 		Scan(&user.Id, &user.FullName, &user.PhoneNumber, &user.Password)
 	if err != nil {
 		return nil

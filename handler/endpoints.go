@@ -7,6 +7,7 @@ import (
 	"github.com/SawitProRecruitment/UserService/generated"
 	"github.com/SawitProRecruitment/UserService/model"
 
+	"github.com/SawitProRecruitment/UserService/pkg/helper"
 	"github.com/SawitProRecruitment/UserService/pkg/jwt"
 	"github.com/SawitProRecruitment/UserService/pkg/response_wrapper"
 	"github.com/labstack/echo/v4"
@@ -41,7 +42,11 @@ func (s *Server) RegisterUser(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(err, 400))
 	}
 
-	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(user))
+	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.CreateUserResponse{
+		FullName:    user.FullName,
+		Id:          user.Id,
+		PhoneNumber: user.GetFormalizedPhoneNumber(),
+	}))
 }
 
 func (s *Server) AuthenticateUser(ctx echo.Context) error {
@@ -67,7 +72,7 @@ func (s *Server) AuthenticateUser(ctx echo.Context) error {
 	}
 
 	// generate jwt
-	token, err := jwt.BuildToken(map[string]interface{}{
+	token, expiredAt, err := jwt.BuildToken(map[string]interface{}{
 		"userId":   user.Id,
 		"fullName": user.FullName,
 	})
@@ -75,7 +80,10 @@ func (s *Server) AuthenticateUser(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(errors.New("failed to build token. please try again"), 400))
 	}
 
-	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(token))
+	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.AuthenticateUserResponse{
+		AccessToken: &token,
+		ExpiredAt:   &expiredAt,
+	}))
 }
 
 func (s *Server) GetUserProfile(ctx echo.Context) error {
@@ -88,7 +96,7 @@ func (s *Server) GetUserProfile(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.UserProfileDto{
 		FullName:    &user.FullName,
-		PhoneNumber: &user.PhoneNumber,
+		PhoneNumber: helper.ToPointer(user.GetFormalizedPhoneNumber()),
 	}))
 }
 
@@ -110,6 +118,7 @@ func (s *Server) UpdateProfile(ctx echo.Context) error {
 
 	user := s.Repository.GetUserById(ctx.Request().Context(), int(data["userId"].(float64)))
 
+	// check for conflicting possibility if user changed the phone number
 	if user.PhoneNumberChanged(req.PhoneNumber) {
 		existingUser := s.Repository.GetUserByPhoneNumber(ctx.Request().Context(), *req.PhoneNumber)
 		if existingUser != nil {
@@ -127,6 +136,6 @@ func (s *Server) UpdateProfile(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.UserProfileDto{
 		FullName:    &user.FullName,
-		PhoneNumber: &user.PhoneNumber,
+		PhoneNumber: helper.ToPointer(user.GetFormalizedPhoneNumber()),
 	}))
 }

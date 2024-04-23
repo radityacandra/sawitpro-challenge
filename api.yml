@@ -33,7 +33,21 @@ paths:
           content:
             application/json:    
               schema:
-                $ref: "#/components/schemas/Response"
+                type: object
+                required:
+                  - success
+                  - data
+                  - message
+                  - code
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/CreateUserResponse"
+                  message:
+                    type: string
+                  code:
+                    type: integer
         '400':
           description: Error Response
           content:
@@ -56,7 +70,21 @@ paths:
           content:
             application/json:    
               schema:
-                $ref: "#/components/schemas/Response"
+                type: object
+                required:
+                  - success
+                  - data
+                  - message
+                  - code
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/AuthenticateUserResponse"
+                  message:
+                    type: string
+                  code:
+                    type: integer
         '400':
           description: Error Response
           content:
@@ -85,7 +113,6 @@ paths:
                   success:
                     type: boolean
                   data:
-                    type: object
                     $ref: "#/components/schemas/UserProfileDto"
                   message:
                     type: string
@@ -118,8 +145,7 @@ paths:
                   success:
                     type: boolean
                   data:
-                    type: object
-                    $ref: "#/components/schemas/UserProfileDto"
+                    $ref: "#/components/schemas/AuthenticateUserResponse"
                   message:
                     type: string
                   code:
@@ -158,6 +184,19 @@ components:
           minLength: 6
           maxLength: 64
           pattern: ^(?=.*[A-Z])(?=.*[0-9])(?=.*[-!$%^&*()_+|~=`{}\[\]:";'<>?,.\/])[\x00-\x7F]{3,64}$
+    CreateUserResponse:
+      type: object
+      required:
+        - id
+        - phoneNumber
+        - fullName
+      properties:
+        id:
+          type: integer
+        phoneNumber:
+          type: string
+        fullName:
+          type: string
     Response: 
       type: object
       required:
@@ -183,9 +222,9 @@ components:
         phoneNumber:
           type: string
           x-oapi-codegen-extra-tags:
-            validate: "min=10,max=13,phoneNumber"
+            validate: "min=10,max=14,phoneNumber"
           minLength: 10
-          maxLength: 13
+          maxLength: 14
         password:
           type: string
           x-oapi-codegen-extra-tags:
@@ -193,6 +232,14 @@ components:
           minLength: 6
           maxLength: 64
           pattern: ^(?=.*[A-Z])(?=.*[0-9])(?=.*[-!$%^&*()_+|~=`{}\[\]:";'<>?,.\/])[\x00-\x7F]{3,64}$
+    AuthenticateUserResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        expiredAt:
+          type: integer
+          format: int64
     UserProfileDto:
       type: object
       properties:

@@ -12,20 +12,21 @@ const (
 	AUDIENCE = "SawitPro-Challenge"
 )
 
-func BuildToken(data map[string]interface{}) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, mapData(data))
+func BuildToken(data map[string]interface{}) (string, int64, error) {
+	claims := mapData(data)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 
 	pkey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(os.Getenv("JWT_PRIVATE_KEY")))
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	tokenString, err := token.SignedString(pkey)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
-	return tokenString, nil
+	return tokenString, claims["exp"].(int64), nil
 }
 
 func mapData(data map[string]interface{}) jwt.MapClaims {

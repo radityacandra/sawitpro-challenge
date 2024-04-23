@@ -1,6 +1,10 @@
 package model
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"fmt"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 type User struct {
 	Id          int
@@ -32,15 +36,20 @@ func (u *User) UpdateFullName(fullName *string) {
 }
 
 func (u *User) UpdatePhoneNumber(phoneNumber *string) {
-	if phoneNumber != nil && *phoneNumber != u.PhoneNumber {
+	if phoneNumber != nil && *phoneNumber != fmt.Sprintf("+%s", u.PhoneNumber) {
 		u.PhoneNumber = *phoneNumber
+		u.PhoneNumber = u.PhoneNumber[1:]
 	}
 }
 
 func (u *User) PhoneNumberChanged(phoneNumber *string) bool {
-	if phoneNumber != nil && *phoneNumber != u.PhoneNumber {
+	if phoneNumber != nil && *phoneNumber != fmt.Sprintf("+%s", u.PhoneNumber) {
 		return true
 	}
 
 	return false
+}
+
+func (u *User) GetFormalizedPhoneNumber() string {
+	return fmt.Sprintf("+%s", u.PhoneNumber)
 }
