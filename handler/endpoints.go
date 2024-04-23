@@ -11,7 +11,6 @@ import (
 	"github.com/SawitProRecruitment/UserService/pkg/jwt"
 	"github.com/SawitProRecruitment/UserService/pkg/response_wrapper"
 	"github.com/labstack/echo/v4"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Server) RegisterUser(ctx echo.Context) error {
@@ -25,24 +24,22 @@ func (s *Server) RegisterUser(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(err, 400))
 	}
 
-	// TODO: move this to struct method
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(err, 400))
-	}
-
 	// check for existing phone number
 	if existingUser := s.Repository.GetUserByPhoneNumber(ctx.Request().Context(), req.PhoneNumber); existingUser != nil {
 		return ctx.JSON(http.StatusBadRequest,
 			response_wrapper.WrapperError(errors.New("registered user with the same phone number already exist"), 400))
 	}
 
-	user := model.NewUser(req.FullName, string(hash), req.PhoneNumber)
+	user := model.NewUser(req.FullName, req.PhoneNumber)
 	if _, err := s.Repository.InsertUser(ctx.Request().Context(), user); err != nil {
 		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(err, 400))
 	}
 
-	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.CreateUserResponse{
+	if err := user.SetupPassword(req.Password); err != nil {
+		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(err, 400))
+	}
+
+	return ctx.JSON(http.StatusCreated, response_wrapper.WrapperSuccess(generated.CreateUserResponse{
 		FullName:    user.FullName,
 		Id:          user.Id,
 		PhoneNumber: user.GetFormalizedPhoneNumber(),
@@ -77,7 +74,7 @@ func (s *Server) AuthenticateUser(ctx echo.Context) error {
 		"fullName": user.FullName,
 	})
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(errors.New("failed to build token. please try again"), 400))
+		return ctx.JSON(http.StatusInternalServerError, response_wrapper.WrapperError(errors.New("failed to build token. please try again"), 500))
 	}
 
 	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.AuthenticateUserResponse{

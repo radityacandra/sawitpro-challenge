@@ -13,10 +13,9 @@ type User struct {
 	PhoneNumber string
 }
 
-func NewUser(fullName, password, phoneNumber string) *User {
+func NewUser(fullName, phoneNumber string) *User {
 	return &User{
 		FullName:    fullName,
-		Password:    password,
 		PhoneNumber: phoneNumber[1:],
 	}
 }
@@ -52,4 +51,14 @@ func (u *User) PhoneNumberChanged(phoneNumber *string) bool {
 
 func (u *User) GetFormalizedPhoneNumber() string {
 	return fmt.Sprintf("+%s", u.PhoneNumber)
+}
+
+func (u *User) SetupPassword(plainPwd string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(plainPwd), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	u.Password = string(hash)
+	return nil
 }
