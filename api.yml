@@ -63,6 +63,40 @@ paths:
             application/json:    
               schema:
                 $ref: "#/components/schemas/Response"
+  /users/profile:
+    get:
+      summary: Get authenticated user profile
+      operationId: getUserProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - message
+                  - code
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    $ref: "#/components/schemas/UserProfileDto"
+                  message:
+                    type: string
+                  code:
+                    type: integer
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
 components:
   schemas:
     CreateUserRequest:
@@ -122,3 +156,18 @@ components:
           minLength: 6
           maxLength: 64
           pattern: ^(?=.*[A-Z])(?=.*[0-9])(?=.*[-!$%^&*()_+|~=`{}\[\]:";'<>?,.\/])[\x00-\x7F]{3,64}$
+    UserProfileDto:
+      type: object
+      required:
+        - fullName
+        - phoneNumber
+      properties:
+        phoneNumber:
+          type: string
+        fullName:
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

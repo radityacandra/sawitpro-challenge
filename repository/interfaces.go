@@ -11,8 +11,8 @@ import (
 )
 
 type RepositoryInterface interface {
-	GetTestById(ctx context.Context, input GetTestByIdInput) (output GetTestByIdOutput, err error)
 	GetUserByPhoneNumber(ctx context.Context, phoneNumber string) (user *model.User)
+	GetUserById(ctx context.Context, id int) (user *model.User)
 
 	InsertUser(ctx context.Context, user *model.User) (*model.User, error)
 }

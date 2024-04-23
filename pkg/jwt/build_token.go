@@ -7,6 +7,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const (
+	ISSUER   = "SawitPro-Challenge"
+	AUDIENCE = "SawitPro-Challenge"
+)
+
 func BuildToken(data map[string]interface{}) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, mapData(data))
 
@@ -28,8 +33,8 @@ func mapData(data map[string]interface{}) jwt.MapClaims {
 		"nbf": time.Now().Unix(),
 		"iat": time.Now().Unix(),
 		"exp": time.Now().Add(3 * time.Hour).Unix(),
-		"iss": "SawitPro-Challenge",
-		"aud": "SawitPro-Challenge",
+		"iss": ISSUER,
+		"aud": []string{AUDIENCE},
 	}
 
 	for key, value := range data {

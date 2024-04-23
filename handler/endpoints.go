@@ -77,3 +77,17 @@ func (s *Server) AuthenticateUser(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(token))
 }
+
+func (s *Server) GetUserProfile(ctx echo.Context) error {
+	data, err := jwt.AuthorizeToken(ctx.Request().Header.Get("Authorization"))
+	if err != nil {
+		return ctx.JSON(http.StatusForbidden, response_wrapper.WrapperError(err, 403))
+	}
+
+	user := s.Repository.GetUserById(ctx.Request().Context(), int(data["userId"].(float64)))
+
+	return ctx.JSON(http.StatusOK, response_wrapper.WrapperSuccess(generated.UserProfileDto{
+		FullName:    user.FullName,
+		PhoneNumber: user.PhoneNumber,
+	}))
+}
