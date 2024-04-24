@@ -27,6 +27,17 @@ paths:
           application/json:
             schema: 
               $ref: '#/components/schemas/CreateUserRequest'
+            examples:
+              valid payload:
+                value:
+                  phoneNumber: "+6281123456789"
+                  password: Test123!!!
+                  fullName: Test User
+              invalid payload:
+                value:
+                  phoneNumber: "6281123456789"
+                  password: Test123
+                  fullName: U
       responses:
         '200':
           description: Success Response
@@ -48,12 +59,48 @@ paths:
                     type: string
                   code:
                     type: integer
+              examples:
+                success:
+                  value:
+                    success: true
+                    message: data provided
+                    code: 200
+                    data:
+                      phoneNumber: "+6281123456789"
+                      fullName: Test
+                      password: Password123!!!
         '400':
           description: Error Response
           content:
             application/json:    
               schema:
-                $ref: "#/components/schemas/Response"
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                "validation error":
+                  value:
+                    success: false
+                    message: "validation error: PhoneNumber field...."
+                    code: 400
+                    data:
+                    errors:
+                      - field: PhoneNumber
+                        message: pattern doesn't match
+                      - field: FullName
+                        message: minimum 3 characters length
+        '409':
+          description: Conflicted User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                error:
+                  value:
+                    success: false
+                    message: "user with the same phone number already exist"
+                    code: 400
+                    data: null
+                    errors: []
   /users/auth:
     post:
       summary: Authenticate a user
@@ -64,6 +111,15 @@ paths:
           application/json:
             schema: 
               $ref: '#/components/schemas/AuthenticateUserRequest'
+            examples:
+              valid payload:
+                value:
+                  phoneNumber: "+6281123456789"
+                  password: Test123!!!
+              invalid payload:
+                value:
+                  phoneNumber: "6281123456789"
+                  password: Test123
       responses:
         '200':
           description: Success Response
@@ -90,7 +146,17 @@ paths:
           content:
             application/json:    
               schema:
-                $ref: "#/components/schemas/Response"
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                "validation error":
+                  value:
+                    success: false
+                    message: "validation error: PhoneNumber field...."
+                    code: 400
+                    data:
+                    errors:
+                      - field: PhoneNumber
+                        message: pattern doesn't match
   /users/profile:
     get:
       summary: Get authenticated user profile
@@ -118,17 +184,59 @@ paths:
                     type: string
                   code:
                     type: integer
+              examples:
+                success:
+                  value:
+                    success: true
+                    message: data provided
+                    code: 200
+                    data:
+                      phoneNumber: "+6281123456789"
+                      fullName: Test
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Response"
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                "invalid header":
+                  value:
+                    success: false
+                    message: "invalid authorization header"
+                    code: 400
+                    data: null
+                    errors: []
+                "expired token":
+                  value:
+                    success: false
+                    message: "token has been expired"
+                    code: 400
+                    data: null
+                    errors: []
     put:
       summary: Update currently authenticated user
       operationId: updateProfile
       security:
         - bearerAuth: []
+      requestBody:
+        description: field to be updated. only attach those need to be updated
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileDto'
+            examples:
+              "valid - all field":
+                value:
+                  fullName: Test User Updated
+                  phoneNumber: "+6281123456788"
+              "valid - partial":
+                value:
+                  fullName: Test User Updated
+              "invalid":
+                value:
+                  fullName: Te
+                  phoneNumber: "628112"
       responses:
         '200':
           description: Success Response
@@ -150,12 +258,36 @@ paths:
                     type: string
                   code:
                     type: integer
+              examples:
+                success:
+                  value:
+                    success: true
+                    message: data provided
+                    code: 200
+                    data:
+                      phoneNumber: "+6281123456789"
+                      fullName: Test
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Response"
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                "invalid header":
+                  value:
+                    success: false
+                    message: "invalid authorization header"
+                    code: 400
+                    data: null
+                    errors: []
+                "expired token":
+                  value:
+                    success: false
+                    message: "token has been expired"
+                    code: 400
+                    data: null
+                    errors: []
 components:
   schemas:
     CreateUserRequest:
@@ -197,13 +329,8 @@ components:
           type: string
         fullName:
           type: string
-    Response: 
+    ErrorResponse:
       type: object
-      required:
-        - success
-        - data
-        - message
-        - code
       properties:
         success:
           type: boolean
@@ -213,6 +340,14 @@ components:
           type: string
         code:
           type: integer
+        errors:
+          type: array
+          items:
+            properties:
+              field:
+                type: string
+              message:
+                type: string
     AuthenticateUserRequest:
       type: object
       required:
