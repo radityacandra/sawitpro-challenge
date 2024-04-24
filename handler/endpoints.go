@@ -31,11 +31,12 @@ func (s *Server) RegisterUser(ctx echo.Context) error {
 	}
 
 	user := model.NewUser(req.FullName, req.PhoneNumber)
-	if _, err := s.Repository.InsertUser(ctx.Request().Context(), user); err != nil {
+
+	if err := user.SetupPassword(req.Password); err != nil {
 		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(err, 400))
 	}
 
-	if err := user.SetupPassword(req.Password); err != nil {
+	if _, err := s.Repository.InsertUser(ctx.Request().Context(), user); err != nil {
 		return ctx.JSON(http.StatusBadRequest, response_wrapper.WrapperError(err, 400))
 	}
 
